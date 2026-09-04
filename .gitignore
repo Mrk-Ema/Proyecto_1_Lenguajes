@@ -1,0 +1,9 @@
+# Maven
+target/
+*.jar
+
+# NetBeans
+nbproject/private/
+
+# Reportes generados
+Reporte_*.html

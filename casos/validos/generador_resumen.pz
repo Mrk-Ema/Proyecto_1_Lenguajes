@@ -1,0 +1,7 @@
+@modelo "gpt-4o"
+@rol "redactor"
+AGENTE redactor {
+contexto = "Redacta resumenes ejecutivos"
+variable informe = CARGAR("informe.pdf")
+RESUMIR informe COMO "resumen.pdf"
+}

@@ -1,0 +1,6 @@
+@modelo "claude-sonnet-4-6"
+AGENTE analista {
+contexto = "Falta la comilla de cierre
+variable ventas = CARGAR(ventas.csv)
+PREGUNTAR "Que paso?" SOBRE ventas
+}

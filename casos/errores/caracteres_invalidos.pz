@@ -1,0 +1,7 @@
+@modelo "claude-sonnet-4-6"
+AGENTE analista {
+contexto = "Eres un analista"
+variable ventas = CARGAR("ventas.csv")
+PREGUNTAR "Que paso?" SOBRE ventas # pregunta mal formada
+variable x = 10 - 2
+}

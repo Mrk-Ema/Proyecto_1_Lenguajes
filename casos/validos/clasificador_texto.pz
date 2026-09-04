@@ -1,0 +1,8 @@
+@modelo "claude-sonnet-4-6"
+@rol "clasificador"
+AGENTE clasificador {
+contexto = "Clasifica comentarios"
+variable comentarios = CARGAR("comentarios.txt")
+CLASIFICAR comentarios EN "positivo", "negativo"
+EXPORTAR resultado -> archivo
+}

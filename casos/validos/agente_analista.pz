@@ -1,0 +1,7 @@
+@modelo "claude-sonnet-4-6"
+@rol "analista financiero"
+AGENTE analista {
+contexto = "Eres un analista de finanzas"
+variable ventas = CARGAR("ventas.csv")
+PREGUNTAR "Cuales fueron las 3 tendencias principales?" SOBRE ventas -> reporte
+}
