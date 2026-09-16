@@ -238,7 +238,7 @@ public class Contenedor extends javax.swing.JFrame {
                     ruta += ".html";
                     archivo = new File(ruta);
                 }
-                String html = com.mycompany.promptzal.Reportes.generarHTML(ultimosTokens, ultimosErrores, ultimoNombreArchivo);
+                String html = com.mycompany.promptzal.Reportes.generarHTML(ultimosTokens, ultimosErrores, ultimoNombreArchivo, contenido);
                 Files.writeString(archivo.toPath(), html);
                 JOptionPane.showMessageDialog(this, "Reporte HTML generado exitosamente en:\n" + archivo.getAbsolutePath(), "Exito", JOptionPane.INFORMATION_MESSAGE);
             } catch (Exception ex) {

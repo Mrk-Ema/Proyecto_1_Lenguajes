@@ -27,11 +27,10 @@ public class Reportes {
         }
     }
 
-    public static String generarHTML(List<Token> tokens, List<Token> errores, String nombreArchivo) {
+    public static String generarHTML(List<Token> tokens, List<Token> errores, String nombreArchivo, String contenido) {
         int totalErrores = errores.size();
-        int identificadores = contar(tokens, "Identificador");
-        int reservadas = contar(tokens, "Palabra reservada");
-        int literales = contar(tokens, "Literal cadena") + contar(tokens, "Literal numerico entero") + contar(tokens, "Literal numerico decimal");
+        int totalLineas = contarLineas(contenido);
+        java.util.Map<String, Integer> frecuencias = frecuenciaPorTipo(tokens);
 
         StringBuilder sb = new StringBuilder();
         sb.append("<!DOCTYPE html>");
@@ -62,11 +61,14 @@ public class Reportes {
         sb.append("</div><div>");
         sb.append("<div class=\"seccion activa\" id=\"s1\"><div class=\"tarjetas\">");
         sb.append(tarjeta("Total tokens", String.valueOf(tokens.size()), ""));
-        sb.append(tarjeta("Identificadores", String.valueOf(identificadores), "ok"));
-        sb.append(tarjeta("Reservadas", String.valueOf(reservadas), ""));
-        sb.append(tarjeta("Literales", String.valueOf(literales), ""));
+        sb.append(tarjeta("Total lineas", String.valueOf(totalLineas), ""));
         sb.append(tarjeta("Errores", String.valueOf(totalErrores), totalErrores > 0 ? "mal" : "ok"));
-        sb.append("</div><h2 style=\"margin:0 0 12px;font-size:17px\">Tokens encontrados</h2><table>");
+        sb.append("</div><h2 style=\"margin:0 0 12px;font-size:17px\">Frecuencia por tipo de token</h2><table>");
+        sb.append("<thead><tr><th>Tipo</th><th>Frecuencia</th></tr></thead><tbody>");
+        for (java.util.Map.Entry<String, Integer> e : frecuencias.entrySet()) {
+            sb.append("<tr><td>").append(escapar(e.getKey())).append("</td><td>").append(e.getValue()).append("</td></tr>");
+        }
+        sb.append("</tbody></table><h2 style=\"margin:0 0 12px;font-size:17px\">Tokens encontrados</h2><table>");
         sb.append("<thead><tr><th>#</th><th>Lexema</th><th>Tipo</th><th>Fila</th><th>Columna</th></tr></thead><tbody>");
         int n = 1;
         for (Token t : tokens) {
@@ -94,14 +96,35 @@ public class Reportes {
         return sb.toString();
     }
 
-    private static int contar(List<Token> tokens, String tipo) {
-        int c = 0;
-        for (Token t : tokens) {
-            if (t.getTipo().equals(tipo)) {
-                c++;
+    private static int contarLineas(String contenido) {
+        if (contenido == null || contenido.isEmpty()) {
+            return 0;
+        }
+        int lineas = 1;
+        for (int i = 0; i < contenido.length(); i++) {
+            if (contenido.charAt(i) == '\n') {
+                lineas++;
             }
         }
-        return c;
+        return lineas;
+    }
+
+    private static final String[] CATEGORIAS_TOKEN = {
+        "Directiva", "Palabra reservada", "Comando de IA", "Funcion", "Conector",
+        "Operador asignacion", "Operador concatenacion", "Delimitador",
+        "Literal cadena", "Literal numerico entero", "Literal numerico decimal",
+        "Identificador"
+    };
+
+    private static java.util.Map<String, Integer> frecuenciaPorTipo(List<Token> tokens) {
+        java.util.Map<String, Integer> mapa = new java.util.LinkedHashMap<>();
+        for (String categoria : CATEGORIAS_TOKEN) {
+            mapa.put(categoria, 0);
+        }
+        for (Token t : tokens) {
+            mapa.put(t.getTipo(), mapa.getOrDefault(t.getTipo(), 0) + 1);
+        }
+        return mapa;
     }
 
     private static String tarjeta(String etiqueta, String valor, String clase) {
