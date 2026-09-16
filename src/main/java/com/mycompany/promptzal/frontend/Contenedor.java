@@ -11,7 +11,6 @@ import java.nio.file.Files;
 import java.util.List;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import javax.swing.table.DefaultTableModel;
 
 /**
  *
@@ -21,44 +20,47 @@ public class Contenedor extends javax.swing.JFrame {
 
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Contenedor.class.getName());
 
+    private Editor editorPanel;
+    private Resultados resultadosPanel;
+
+    private List<Token> ultimosTokens = new java.util.ArrayList<>();
+    private List<Token> ultimosErrores = new java.util.ArrayList<>();
+    private String ultimoNombreArchivo = "codigo_promptzal.pz";
+    private boolean analizado = false;
+
     /**
      * Creates new form Contenedor
      */
     public Contenedor() {
         initComponents();
+
+        editorPanel = new Editor();
+        resultadosPanel = new Resultados();
+        jSplitPane1.setLeftComponent(editorPanel);
+        jSplitPane1.setRightComponent(resultadosPanel);
+        jSplitPane1.setDividerLocation(500);
+        jSplitPane1.setResizeWeight(0.5);
+        setSize(1100, 700);
+
+        editorPanel.getDocumento().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                analizado = false;
+            }
+
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                analizado = false;
+            }
+
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                analizado = false;
+            }
+        });
+
+        itemAbrir.addActionListener(evt -> abrirArchivo());
+        itemGuardar.addActionListener(evt -> guardarArchivo());
+        itemGenerarHTML.addActionListener(evt -> generarHTML());
+        jMenuItem2.addActionListener(evt -> generarAFD());
         setLocationRelativeTo(null);
-    }
-
-    public String getTextoEditor() {
-        return textAreaEditor.getText();
-    }
-
-    public void setTextoEditor(String texto) {
-        textAreaEditor.setText(texto);
-    }
-
-    public void mostrarTokens(List<Token> tokens) {
-        DefaultTableModel modelo = (DefaultTableModel) tablaTokens.getModel();
-        modelo.setRowCount(0);
-        for (Token t : tokens) {
-            String lexema = t.getLexema();
-            if ("Literal cadena".equals(t.getTipo()) && lexema.startsWith("\"") && lexema.endsWith("\"")) {
-                lexema = lexema.substring(1, lexema.length() - 1);
-            }
-            modelo.addRow(new Object[]{lexema, t.getTipo(), t.getFila(), t.getColumna()});
-        }
-    }
-
-    public void mostrarErrores(List<Token> errores) {
-        DefaultTableModel modelo = (DefaultTableModel) tablaErrores.getModel();
-        modelo.setRowCount(0);
-        if (errores.isEmpty()) {
-            modelo.addRow(new Object[]{"Ninguno", "No se encontraron errores lexicos", "-", "-"});
-        } else {
-            for (Token e : errores) {
-                modelo.addRow(new Object[]{e.getLexema(), e.getTipo(), e.getFila(), e.getColumna()});
-            }
-        }
     }
 
     /**
@@ -70,142 +72,122 @@ public class Contenedor extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        scrollEditor = new javax.swing.JScrollPane();
-        textAreaEditor = new javax.swing.JTextArea();
-        btnCargar = new javax.swing.JButton();
-        btnAnalizar = new javax.swing.JButton();
-        tabbedResultados = new javax.swing.JTabbedPane();
-        scrollTokens = new javax.swing.JScrollPane();
-        tablaTokens = new javax.swing.JTable();
-        scrollErrores = new javax.swing.JScrollPane();
-        tablaErrores = new javax.swing.JTable();
+        jSplitPane1 = new javax.swing.JSplitPane();
+        jMenuBar1 = new javax.swing.JMenuBar();
+        jMenu1 = new javax.swing.JMenu();
+        itemAbrir = new javax.swing.JMenuItem();
+        itemGuardar = new javax.swing.JMenuItem();
+        itemGenerarAFD = new javax.swing.JMenu();
+        itemAnalizar = new javax.swing.JMenuItem();
+        itemGenerarHTML = new javax.swing.JMenuItem();
+        jMenuItem2 = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("PromptZal - Analizador Lexico (Proyecto 1)");
+        getContentPane().add(jSplitPane1, java.awt.BorderLayout.CENTER);
 
-        textAreaEditor.setColumns(20);
-        textAreaEditor.setFont(new java.awt.Font("Monospaced", 0, 14)); // NOI18N
-        textAreaEditor.setRows(5);
-        textAreaEditor.setText("@modelo \"claude-sonnet-4-6\"\n@rol \"analista financiero\"\nAGENTE analista {\n    contexto = \"Eres un analista de finanzas\"\n    variable ventas = CARGAR(\"ventas.csv\")\n    PREGUNTAR \"Cuales fueron las 3 tendencias principales?\" SOBRE ventas -> reporte\n}\n\nEJECUTAR analista\nEXPORTAR reporte\n");
-        scrollEditor.setViewportView(textAreaEditor);
+        jMenu1.setText("Archivo");
 
-        btnCargar.setText("Cargar Codigo");
-        btnCargar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnCargarActionPerformed(evt);
-            }
-        });
+        itemAbrir.setText("Abrir codigo");
+        jMenu1.add(itemAbrir);
 
-        btnAnalizar.setText("Analizar Codigo");
-        btnAnalizar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnAnalizarActionPerformed(evt);
-            }
-        });
+        itemGuardar.setText("Guardar codigo");
+        jMenu1.add(itemGuardar);
 
-        tablaTokens.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
+        jMenuBar1.add(jMenu1);
 
-            },
-            new String [] {
-                "Lexema", "Tipo", "Fila", "Columna"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.Integer.class, java.lang.Integer.class
-            };
-            boolean[] canEdit = new boolean [] {
-                false, false, false, false
-            };
+        itemGenerarAFD.setText("Acciones");
 
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
+        itemAnalizar.setText("Analizar codigo");
+        itemAnalizar.addActionListener(this::itemAnalizarActionPerformed);
+        itemGenerarAFD.add(itemAnalizar);
 
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
-            }
-        });
-        scrollTokens.setViewportView(tablaTokens);
+        itemGenerarHTML.setText("Generar reporte HTML");
+        itemGenerarAFD.add(itemGenerarHTML);
 
-        tabbedResultados.addTab("Tokens Reconocidos", scrollTokens);
+        jMenuItem2.setText("Generar AFD");
+        itemGenerarAFD.add(jMenuItem2);
 
-        tablaErrores.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
+        jMenuBar1.add(itemGenerarAFD);
 
-            },
-            new String [] {
-                "Lexema / Caracter", "Tipo de Error", "Fila", "Columna"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.Integer.class, java.lang.Integer.class
-            };
-            boolean[] canEdit = new boolean [] {
-                false, false, false, false
-            };
-
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
-
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
-            }
-        });
-        scrollErrores.setViewportView(tablaErrores);
-
-        tabbedResultados.addTab("Errores Lexicos", scrollErrores);
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(scrollEditor, javax.swing.GroupLayout.DEFAULT_SIZE, 526, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(tabbedResultados, javax.swing.GroupLayout.DEFAULT_SIZE, 496, Short.MAX_VALUE)
-                .addContainerGap())
-            .addGroup(layout.createSequentialGroup()
-                .addGap(105, 105, 105)
-                .addComponent(btnCargar, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(btnAnalizar, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(scrollEditor)
-                    .addComponent(tabbedResultados, javax.swing.GroupLayout.DEFAULT_SIZE, 400, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnCargar, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnAnalizar, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18))
-        );
+        setJMenuBar(jMenuBar1);
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnCargarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCargarActionPerformed
+    private void itemAnalizarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemAnalizarActionPerformed
+        analizarCodigo();
+    }//GEN-LAST:event_itemAnalizarActionPerformed
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
+            logger.log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(() -> new Contenedor().setVisible(true));
+    }
+
+    private void abrirArchivo() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Archivos PromptZal (.pz)", "pz"));
         if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
                 File archivo = fileChooser.getSelectedFile();
                 String contenido = Files.readString(archivo.toPath());
-                textAreaEditor.setText(contenido);
+                editorPanel.setTexto(contenido);
+                ultimoNombreArchivo = archivo.getName();
+                analizado = false;
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Error al leer el archivo: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
-    }//GEN-LAST:event_btnCargarActionPerformed
+    }
 
-    private void btnAnalizarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAnalizarActionPerformed
-        String contenido = textAreaEditor.getText();
+    private void guardarArchivo() {
+        String contenido = editorPanel.getTexto();
+        if (contenido == null || contenido.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "El editor esta vacio. No hay nada que guardar.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Archivos PromptZal (.pz)", "pz"));
+        fileChooser.setSelectedFile(new File(ultimoNombreArchivo));
+        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            try {
+                File archivo = fileChooser.getSelectedFile();
+                String ruta = archivo.getAbsolutePath();
+                if (!ruta.endsWith(".pz")) {
+                    ruta += ".pz";
+                    archivo = new File(ruta);
+                }
+                Files.writeString(archivo.toPath(), contenido);
+                ultimoNombreArchivo = archivo.getName();
+                JOptionPane.showMessageDialog(this, "Archivo guardado exitosamente.", "Exito", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Error al guardar el archivo: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void analizarCodigo() {
+        String contenido = editorPanel.getTexto();
         if (contenido == null || contenido.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "El editor esta vacio.", "Advertencia", JOptionPane.WARNING_MESSAGE);
             return;
@@ -213,29 +195,88 @@ public class Contenedor extends javax.swing.JFrame {
 
         Tokenizador tokenizador = new Tokenizador();
         tokenizador.analizar(contenido);
-        List<Token> tokens = tokenizador.getTokens();
-        List<Token> errores = tokenizador.getErrores();
+        ultimosTokens = tokenizador.getTokens();
+        ultimosErrores = tokenizador.getErrores();
+        analizado = true;
 
-        mostrarTokens(tokens);
-        mostrarErrores(errores);
+        resultadosPanel.mostrarTokens(ultimosTokens);
+        resultadosPanel.mostrarErrores(ultimosErrores);
 
         JOptionPane.showMessageDialog(this,
-            "Analisis completado.\n" +
-            "Tokens: " + tokens.size() + "\n" +
-            "Errores: " + errores.size(),
-            "Resultado", JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_btnAnalizarActionPerformed
+                "Analisis completado.\n"
+                + "Tokens: " + ultimosTokens.size() + "\n"
+                + "Errores: " + ultimosErrores.size(),
+                "Resultado", JOptionPane.INFORMATION_MESSAGE);
+    }
 
+    private void generarHTML() {
+        String contenido = editorPanel.getTexto();
+        if (contenido == null || contenido.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "El editor esta vacio. Escriba codigo y analicelo primero.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        if (!analizado) {
+            Tokenizador tokenizador = new Tokenizador();
+            tokenizador.analizar(contenido);
+            ultimosTokens = tokenizador.getTokens();
+            ultimosErrores = tokenizador.getErrores();
+            analizado = true;
+            resultadosPanel.mostrarTokens(ultimosTokens);
+            resultadosPanel.mostrarErrores(ultimosErrores);
+        }
+
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Reporte HTML (.html)", "html"));
+        String nombreHtml = ultimoNombreArchivo.endsWith(".pz") ? ultimoNombreArchivo.substring(0, ultimoNombreArchivo.length() - 3) + ".html" : "reporte_promptzal.html";
+        fileChooser.setSelectedFile(new File(nombreHtml));
+        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            try {
+                File archivo = fileChooser.getSelectedFile();
+                String ruta = archivo.getAbsolutePath();
+                if (!ruta.endsWith(".html")) {
+                    ruta += ".html";
+                    archivo = new File(ruta);
+                }
+                String html = com.mycompany.promptzal.Reportes.generarHTML(ultimosTokens, ultimosErrores, ultimoNombreArchivo);
+                Files.writeString(archivo.toPath(), html);
+                JOptionPane.showMessageDialog(this, "Reporte HTML generado exitosamente en:\n" + archivo.getAbsolutePath(), "Exito", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Error al generar el reporte HTML: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void generarAFD() {
+        String contenido = editorPanel.getTexto();
+        if (contenido == null || contenido.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "El editor esta vacio. Escriba codigo y analicelo primero.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        if (!analizado) {
+            Tokenizador tokenizador = new Tokenizador();
+            tokenizador.analizar(contenido);
+            ultimosTokens = tokenizador.getTokens();
+            ultimosErrores = tokenizador.getErrores();
+            analizado = true;
+            resultadosPanel.mostrarTokens(ultimosTokens);
+            resultadosPanel.mostrarErrores(ultimosErrores);
+        }
+
+        JOptionPane.showMessageDialog(this, "La generacion del AFD estara disponible pronto.",
+                "Generar AFD", JOptionPane.INFORMATION_MESSAGE);
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnAnalizar;
-    private javax.swing.JButton btnCargar;
-    private javax.swing.JScrollPane scrollEditor;
-    private javax.swing.JScrollPane scrollErrores;
-    private javax.swing.JScrollPane scrollTokens;
-    private javax.swing.JTabbedPane tabbedResultados;
-    private javax.swing.JTable tablaErrores;
-    private javax.swing.JTable tablaTokens;
-    private javax.swing.JTextArea textAreaEditor;
+    private javax.swing.JMenuItem itemAbrir;
+    private javax.swing.JMenuItem itemAnalizar;
+    private javax.swing.JMenu itemGenerarAFD;
+    private javax.swing.JMenuItem itemGenerarHTML;
+    private javax.swing.JMenuItem itemGuardar;
+    private javax.swing.JMenu jMenu1;
+    private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenuItem jMenuItem2;
+    private javax.swing.JSplitPane jSplitPane1;
     // End of variables declaration//GEN-END:variables
 }
