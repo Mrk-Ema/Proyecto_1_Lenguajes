@@ -248,24 +248,32 @@ public class Contenedor extends javax.swing.JFrame {
     }
 
     private void generarAFD() {
-        String contenido = editorPanel.getTexto();
-        if (contenido == null || contenido.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "El editor esta vacio. Escriba codigo y analicelo primero.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Guardar imagen del AFD (PromptZal)");
+        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Imagen PNG (.png)", "png"));
+        fileChooser.setSelectedFile(new File("afd_promptzal.png"));
+        if (fileChooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) {
             return;
         }
-
-        if (!analizado) {
-            Tokenizador tokenizador = new Tokenizador();
-            tokenizador.analizar(contenido);
-            ultimosTokens = tokenizador.getTokens();
-            ultimosErrores = tokenizador.getErrores();
-            analizado = true;
-            resultadosPanel.mostrarTokens(ultimosTokens);
-            resultadosPanel.mostrarErrores(ultimosErrores);
+        try {
+            File archivo = fileChooser.getSelectedFile();
+            String ruta = archivo.getAbsolutePath();
+            if (!ruta.toLowerCase().endsWith(".png")) {
+                ruta += ".png";
+                archivo = new File(ruta);
+            }
+            String rutaPng = com.mycompany.promptzal.GraficadorAFD.graficar(archivo);
+            JOptionPane.showMessageDialog(this,
+                    "AFD generado exitosamente en:\n" + rutaPng,
+                    "Exito", JOptionPane.INFORMATION_MESSAGE);
+            if (java.awt.Desktop.isDesktopSupported()) {
+                java.awt.Desktop.getDesktop().open(new File(rutaPng));
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Error al generar el AFD: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
-
-        JOptionPane.showMessageDialog(this, "La generacion del AFD estara disponible pronto.",
-                "Generar AFD", JOptionPane.INFORMATION_MESSAGE);
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
